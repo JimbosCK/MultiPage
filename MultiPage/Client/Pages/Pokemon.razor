@@ -21,6 +21,9 @@
     </div>
 </EditForm>
 
+@if (_showSpinner) {
+    <div class="lds-hourglass"></div>
+}
 
 @if (_getBranchesError) {
     <p>Error getting Data. Check if name exists.</p>
@@ -30,11 +33,13 @@
 
 
 @code {
+    private bool _showSpinner = false;
     public AreaInformation AreaInfo = new AreaInformation();
     private RootArea _RootArea = new RootArea();
     private bool _getBranchesError;
 
     public async Task OnSumbit() {
+        _showSpinner = true;
         FormatInputArea();
         string baseUrl = "https://pokeapi.co/api/v2/";
         var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "location/" + AreaInfo.Name);
@@ -51,6 +56,7 @@
             _RootArea = new RootArea();
             _getBranchesError = true;
         }
+        _showSpinner = false;
     }
 
     private void FormatInputArea() {
