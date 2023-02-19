@@ -15,4 +15,8 @@
     <ProjectReference Include="..\Shared\MultiPage.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Components\" />
+  </ItemGroup>
+
 </Project>

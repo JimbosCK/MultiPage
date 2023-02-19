@@ -1,10 +1,65 @@
 ﻿@page "/Pokemon"
+@using MultiPage.Shared.StockTracker.Shared;
+@using System.Text.Json;
+@using System.Text.RegularExpressions;
+
+@inject HttpClient ClientFactory
+<h3>Pokemon Area Search</h3>
+<h4>Type in the box the name of an area or the ID of the area to get information about it.</h4>
+
+<EditForm Model="AreaInfo">
+    <div class="row">
+        <div class="col-md-6">
+            <label class="form-label">Area Name/ID</label>
+            <InputText class="form-control" id="area" @bind-Value="AreaInfo.Name" />
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col">
+            <button class="btn btn-success" type="submit" @onclick="() => OnSumbit()">Sumbit</button>
+        </div>
+    </div>
+</EditForm>
 
 
-<h3>Pokemon</h3>
+@if (_getBranchesError) {
+    <p>Error getting Data. Check if name exists.</p>
+} else {
+    <h2> ID: @_RootArea.id - Name: @_RootArea.name </h2>
+}
 
-<MultiPage.Client.Components.Pokemon></MultiPage.Client.Components.Pokemon>
 
 @code {
+    public AreaInformation AreaInfo = new AreaInformation();
+    private RootArea _RootArea = new RootArea();
+    private bool _getBranchesError;
 
+    public async Task OnSumbit() {
+        FormatInputArea();
+        string baseUrl = "https://pokeapi.co/api/v2/";
+        var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "location/" + AreaInfo.Name);
+
+        var response = await ClientFactory.SendAsync(request);
+        //response.EnsureSuccessStatusCode(); //throws exception!
+
+        if (response.IsSuccessStatusCode) {
+            using var responseStream = await response.Content.ReadAsStreamAsync();
+            var test = await response.Content.ReadAsStringAsync();
+            _RootArea = await JsonSerializer.DeserializeAsync<RootArea>(responseStream) ?? new RootArea();
+            _getBranchesError = false;
+        } else {
+            _RootArea = new RootArea();
+            _getBranchesError = true;
+        }
+    }
+
+    private void FormatInputArea() {
+        AreaInfo.Name = Regex.Replace(AreaInfo.Name, @"\s+", " ");
+        AreaInfo.Name = AreaInfo.Name.Replace(' ', '-');
+    }
+
+
+    public class AreaInformation {
+        public string Name { get; set; } = string.Empty;
+    }
 }
